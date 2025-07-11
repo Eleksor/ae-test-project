@@ -14,8 +14,7 @@ import java.util.List;
 import static api.data.Constants.BASE_SKU_ID;
 import static api.data.Constants.THREE_SEVERAL_ITEMS;
 import static io.restassured.RestAssured.given;
-import static io.restassured.RestAssured.request;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GuestTests {
     static TokenClient tokenClient = new TokenClient();
@@ -91,30 +90,30 @@ public class GuestTests {
                 .statusCode(202);
     }
 
-//    @Test
-//    void addItemTest() {
-//        int qty = 1;
-//
-//        BagResponse beforeAdd = bagController.getBag();
-//        assertThat(beforeAdd.getData().getItemCount())
-//                .isZero();
-//
-//        bagController.addItem(BASE_SKU_ID, qty)
-//                .then()
-//                .log().body()
-//                .statusCode(202);
-//
-//        BagResponse afterAdd = bagController.getBag();
-//
-//        assertThat(afterAdd.getData().getItemCount())
-//                .isEqualTo(qty);
-//
-//        assertThat(afterAdd.getData().getItems())
-//                .as("Bag should contain item with sku %s and quantity %d", BASE_SKU_ID, qty)
-//                .anySatisfy(item -> {
-//                    assertThat(item.getSkuId()).isEqualTo(BASE_SKU_ID);
-//                    assertThat(item.getQuantity()).isEqualTo(qty);
-//                });
-//    }
+    @Test
+    void addItemTest() {
+        int qty = 1;
+
+        BagResponse beforeAdd = bagController.getBag();
+        assertThat(beforeAdd.getData().getItemCount())
+                .isZero();
+
+        bagController.addItem(BASE_SKU_ID, qty)
+                .then()
+                .log().body()
+                .statusCode(202);
+
+        BagResponse afterAdd = bagController.getBag();
+
+        assertThat(afterAdd.getData().getItemCount())
+                .isEqualTo(qty);
+
+        assertThat(afterAdd.getData().getItems())
+                .as("Bag should contain item with sku %s and quantity %d", BASE_SKU_ID, qty)
+                .anySatisfy(item -> {
+                    assertThat(item.getSku()).isEqualTo(BASE_SKU_ID);
+                    assertThat(item.getQuantity()).isEqualTo(qty);
+                });
+    }
 
 }
