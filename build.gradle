@@ -28,6 +28,7 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
     testImplementation 'org.assertj:assertj-core:3.27.3'
+    implementation("org.seleniumhq.selenium:selenium-java:4.34.0")
 }
 
 test {
