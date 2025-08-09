@@ -9,6 +9,8 @@ import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static api.data.Constants.BASE_SKU_ID;
@@ -27,47 +29,7 @@ public class GuestTests {
     }
 
     @Test
-    void testAddOneItemToCart() {
-
-        ItemRequest itemRequest = new ItemRequest(List.of(new ItemRequest.Item("0042501858", 1)));
-
-        ValidatableResponse r =
-                given()
-                        .baseUri("https://www.ae.com/")
-                        .accept(ContentType.JSON)
-                        .contentType(ContentType.JSON)
-                        .header("accept", "application/json")
-                        .header("aesite", "AEO_US")
-                        .header("content-type", "application/json")
-                        .header("x-access-token", guestToken)
-                        .body(itemRequest)
-                        //.body(ONE_ITEM)
-                        .when()
-                        .post("ugp-api/bag/v1/items")
-                        .then()
-                        .statusCode(202);
-    }
-
-    @Test
-    void testAddThreeEqualItemsToCart() {
-        ItemRequest itemRequest3 = new ItemRequest(List.of(new ItemRequest.Item("0042501858", 3)));
-
-        ValidatableResponse r =
-                given()
-                        .baseUri("https://www.ae.com/")
-                        .header("accept", "application/json")
-                        .header("aesite", "AEO_US")
-                        .header("content-type", "application/json")
-                        .header("x-access-token", guestToken)
-                        .body(itemRequest3)
-                        .when()
-                        .post("ugp-api/bag/v1/items")
-                        .then()
-                        .statusCode(202);
-    }
-
-    @Test
-    void testAddOneItemToCartBagController() {
+    void testAddOneItem() {
         bagController
                 .addItem(BASE_SKU_ID, 1)
                 .then()
@@ -75,7 +37,7 @@ public class GuestTests {
     }
 
     @Test
-    void testAddThreeItemsToCartBagController() {
+    void testAddThreeEqualItems() {
         bagController
                 .addItem(BASE_SKU_ID, 3)
                 .then()
@@ -83,11 +45,30 @@ public class GuestTests {
     }
 
     @Test
-    void testAddSeveralItemsToCartBagController() {
+    void testAddSeveralThreeItemsToCart() {
         bagController
                 .addListOFItems(THREE_SEVERAL_ITEMS)
                 .then()
                 .statusCode(202);
+
+        BagResponse afterAdd = bagController.getBag();
+        assertThat(afterAdd.getData().getItemCount())
+                .isEqualTo(3);
+    }
+    @Test
+    void testAddOneItemThatNotExistsToCartBag() {
+        bagController
+                .addItem("0000324", 1)
+                .then()
+                .log().all()
+                .statusCode(422);
+
+        BagResponse afterAdd = bagController.getBag();
+
+        assertThat(afterAdd.getData().getItemCount())
+                .isZero();
+        assertThat(afterAdd.getData().getTotal())
+                .isZero();
     }
 
     @Test
@@ -114,6 +95,46 @@ public class GuestTests {
                     assertThat(item.getSku()).isEqualTo(BASE_SKU_ID);
                     assertThat(item.getQuantity()).isEqualTo(qty);
                 });
+    }
+
+    @Test
+    void testBagResponseTotal() {
+        BigDecimal totalPrice = new BigDecimal("0.0");
+        BigDecimal totalFromResponse;
+
+        bagController
+                .addListOFItems(THREE_SEVERAL_ITEMS)
+                .then()
+                .statusCode(202);
+
+        BagResponse baggy = bagController.getBag();
+        totalFromResponse = BigDecimal.valueOf(baggy.getData().getSummary().getTotal());
+
+        List<BagResponse.Item> listItems = baggy.getData().getItems();
+        for (int i = 0; i < listItems.size(); i++) {
+            totalPrice = totalPrice.add(BigDecimal.valueOf(listItems.get(i).getPrice()));
+        }
+
+        assertThat(totalFromResponse.doubleValue()).isEqualTo(totalPrice.doubleValue());
+    }
+
+    @Test
+    void testBagResponseItemList() {
+        ItemRequest itemsFromResponse = new ItemRequest();
+
+        bagController
+                .addListOFItems(THREE_SEVERAL_ITEMS)
+                .then()
+                .statusCode(202);
+
+        BagResponse baggy = bagController.getBag();
+        List<BagResponse.Item> listItems = baggy.getData().getItems();
+
+        for (int i = 0; i < listItems.size(); i++) {
+            itemsFromResponse.getItems().add(new ItemRequest.Item(listItems.get(i).getSku(), listItems.get(i).getQuantity()));
+        }
+
+        assertThat(THREE_SEVERAL_ITEMS).containsExactlyInAnyOrderElementsOf(itemsFromResponse.getItems());
     }
 
 }

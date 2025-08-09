@@ -100,7 +100,6 @@ public class FirstTests {
     void getBag() {
         LoginClient loginClient = new LoginClient();
         loginClient.loginViaApi();
-        System.out.println(loginClient.getCookieHeader());
 
         Response r =
                 given()

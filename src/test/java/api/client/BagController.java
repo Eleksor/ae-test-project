@@ -6,6 +6,7 @@ import io.qameta.allure.Step;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class BagController {
                 .andReturn();
     }
 
-    @Step("Add item to bag")
+    @Step("Add list of items to bag")
     public Response addListOFItems(List<ItemRequest.Item> items) {
         ItemRequest request = new ItemRequest(items);
 
@@ -61,6 +62,13 @@ public class BagController {
                 .statusCode(200)
                 .extract()
                 .as(BagResponse.class);
+    }
+
+    @Step("Check status code")
+    public ResponseSpecification checkStatusCode(int statusCode) {
+        return given(this.requestSpecification)
+                .then()
+                .statusCode(statusCode);
     }
 
 }
