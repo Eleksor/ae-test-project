@@ -21,6 +21,14 @@ public class ItemRequest {
     public static class Item {
         private String skuId;
         private int quantity;
+        private String itemId;
+
+        public Item(String skuId, int quantity) {
+            this.skuId = skuId;
+            this.quantity = quantity;
+        }
     }
+
+
 }
 

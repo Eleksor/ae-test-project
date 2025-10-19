@@ -1,6 +1,7 @@
 package api;
 
 import api.client.BagController;
+import api.client.SkuIdsGetterClient;
 import api.client.TokenClient;
 import api.models.BagResponse;
 import api.models.ItemRequest;
@@ -13,11 +14,12 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import static api.data.Constants.BASE_SKU_ID;
-import static api.data.Constants.THREE_SEVERAL_ITEMS;
+import static api.data.Constants.*;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
-
+//удаление товара, применение скидки, дискаунты(как влияют на тотал корзины), обновление qty и skuId товара(этого же
+// но с другим размером и другого лота) в корзине(PATCH)
+//предельное количество добавляемого товара(на 11ти приходит ошибка),
 public class GuestTests {
     static TokenClient tokenClient = new TokenClient();
     private final BagController bagController = new BagController();
@@ -39,8 +41,9 @@ public class GuestTests {
     @Test
     void testAddThreeEqualItems() {
         bagController
-                .addItem(BASE_SKU_ID, 3)
+                .addItem(BASE_SKU_ID, 10)
                 .then()
+                .log().body()
                 .statusCode(202);
     }
 
@@ -119,7 +122,7 @@ public class GuestTests {
     }
 
     @Test
-    void testBagResponseItemList() {
+    void testBagResponseItemListCompare() {
         ItemRequest itemsFromResponse = new ItemRequest();
 
         bagController
@@ -137,4 +140,161 @@ public class GuestTests {
         assertThat(THREE_SEVERAL_ITEMS).containsExactlyInAnyOrderElementsOf(itemsFromResponse.getItems());
     }
 
+    @Test
+    void testDeleteOneItem() {
+        String deleteItemId;
+        BagResponse afterAdd;
+        BagResponse afterDelete;
+
+         bagController
+                .addItem(BASE_SKU_ID, 1)
+                .then()
+                .statusCode(202);
+
+        afterAdd = bagController
+                .getBag();
+
+        deleteItemId = afterAdd
+                .getData()
+                .getItems()
+                .get(0)
+                .getItemId();
+
+        bagController
+                .deleteItem(deleteItemId)
+                .then()
+                .statusCode(202);
+
+        afterDelete = bagController
+                .getBag();
+
+        assertThat(afterAdd.getData().getItems())
+                .isNotEmpty();
+        assertThat(afterDelete.getData().getItems())
+                .isEmpty();
+    }
+
+    @Test
+    void testDeleteThreeItems() {
+        String deleteItemIds = "";
+        BagResponse afterAdd;
+        BagResponse afterDelete;
+
+        bagController
+                .addListOFItems(THREE_SEVERAL_ITEMS)
+                .then()
+                .statusCode(202);
+
+        afterAdd = bagController
+                .getBag();
+
+        for (int i = 0; i < afterAdd.getData().getItems().size(); i++) {
+            if(i == 0) {
+                deleteItemIds = deleteItemIds + afterAdd
+                        .getData()
+                        .getItems()
+                        .get(i)
+                        .getItemId();
+            } else if (i > 0 && i < afterAdd.getData().getItems().size()) {
+                deleteItemIds = deleteItemIds + ", " + afterAdd
+                        .getData()
+                        .getItems()
+                        .get(i)
+                        .getItemId();;
+            }
+        }
+
+        System.out.println(deleteItemIds);
+
+        bagController
+                .deleteItem(deleteItemIds)
+                .then()
+                .statusCode(202);
+
+        afterDelete = bagController
+                .getBag();
+
+        assertThat(afterAdd.getData().getItems())
+                .isNotEmpty();
+        assertThat(afterDelete.getData().getItems())
+                .isEmpty();
+    }
+
+    @Test
+    void testReplaceOneItemOnSameGood() {
+        String replacingItemId;
+        BagResponse afterAdd;
+        BagResponse afterReplace;
+
+        bagController
+                .addItem(BASE_SKU_ID, 1)
+                .then()
+                .statusCode(202);
+
+        afterAdd = bagController
+                .getBag();
+
+        replacingItemId = afterAdd
+                .getData()
+                .getItems()
+                .get(0)
+                .getItemId();
+
+        bagController
+                .replaceItem( BASE_SKU_ID, 1, replacingItemId)
+                .then()
+                .statusCode(202);
+
+        afterReplace = bagController
+                .getBag();
+
+        assertThat(afterAdd.getData().getItems())
+                .isNotEmpty();
+        assertThat(afterReplace.getData().getItems())
+                .isEqualTo(afterAdd.getData().getItems());
+        assertThat(afterReplace.getData().getItems().get(0).getSku())
+                .isEqualTo(BASE_SKU_ID);
+    }
+
+    @Test
+    void testReplaceOneItemOnDifferentGood() {
+        String replacingItemId;
+        BagResponse afterAdd;
+        BagResponse afterReplace;
+
+        bagController
+                .addItem(BASE_SKU_ID, 1)
+                .then()
+                .statusCode(202);
+
+        afterAdd = bagController
+                .getBag();
+
+        replacingItemId = afterAdd
+                .getData()
+                .getItems()
+                .get(0)
+                .getItemId();
+
+        bagController
+                .replaceItem( BASE_REPLACING_SKU_ID, 1, replacingItemId)
+                .then()
+                .statusCode(202);
+
+        afterReplace = bagController
+                .getBag();
+
+        assertThat(afterAdd.getData().getItems())
+                .isNotEmpty();
+        assertThat(afterReplace.getData().getItems())
+                .isNotEqualTo(afterAdd.getData().getItems());
+        assertThat(afterReplace.getData().getItems().get(0).getSku())
+                .isEqualTo(BASE_REPLACING_SKU_ID);
+    }
+
+    @Test
+    void testSkus() {
+        SkuIdsGetterClient skus = new SkuIdsGetterClient();
+        System.out.println(skus.getSkus());
+    }
 }

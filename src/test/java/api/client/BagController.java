@@ -53,6 +53,39 @@ public class BagController {
                 .andReturn();
     }
 
+    @Step("Delete item from bag")
+    public Response deleteItem(String itemIds) {
+
+        return given(this.requestSpecification)
+                .queryParam("itemIds",itemIds)
+                .when()
+                .delete(ITEMS_ENDPOINT)
+                .andReturn();
+    }
+
+    @Step("Delete item from bag")
+    public Response replaceItem(String skuIdNewItem, int quantity, String itemId) {
+        ItemRequest.Item item = new ItemRequest.Item(skuIdNewItem, quantity, itemId);
+        ItemRequest request = new ItemRequest(List.of(item));
+
+        return given(this.requestSpecification)
+                .body(request)
+                .when()
+                .patch(ITEMS_ENDPOINT)
+                .andReturn();
+    }
+
+    @Step("Delete list of items from bag")
+    public Response deleteListOFItems(List<ItemRequest.Item> items) {
+        ItemRequest request = new ItemRequest(items);
+
+        return given(this.requestSpecification)
+                .body(request)
+                .when()
+                .delete(ITEMS_ENDPOINT)
+                .andReturn();
+    }
+
     @Step("Get bag")
     public BagResponse getBag() {
         return given(this.requestSpecification)
