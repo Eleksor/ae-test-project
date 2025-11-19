@@ -3,6 +3,7 @@ package api;
 import api.client.BagController;
 import api.client.SkuIdsGetterClient;
 import api.client.TokenClient;
+import api.data.Constants;
 import api.models.BagResponse;
 import api.models.ItemRequest;
 import io.restassured.http.ContentType;
@@ -24,10 +25,14 @@ public class GuestTests {
     static TokenClient tokenClient = new TokenClient();
     private final BagController bagController = new BagController();
     static String guestToken;
+    static SkuIdsGetterClient skuGetter;
+    static Constants constants;
 
     @BeforeAll
     static void setup() {
         guestToken = tokenClient.tokenGuest();
+        skuGetter = new SkuIdsGetterClient();
+        constants = new Constants(skuGetter.getSkus());
     }
 
     @Test
@@ -261,6 +266,7 @@ public class GuestTests {
         String replacingItemId;
         BagResponse afterAdd;
         BagResponse afterReplace;
+        System.out.println(BASE_SKU_ID + " " + BASE_REPLACING_SKU_ID);
 
         bagController
                 .addItem(BASE_SKU_ID, 1)
@@ -295,6 +301,6 @@ public class GuestTests {
     @Test
     void testSkus() {
         SkuIdsGetterClient skus = new SkuIdsGetterClient();
-        System.out.println(skus.getSkus());
+        System.out.println(constants.BASE_SKU_ID);
     }
 }

@@ -1,8 +1,7 @@
 package api.client;
 
-import api.models.ItemRequest;
+import api.models.SkuIdsFillerResponse;
 import io.qameta.allure.restassured.AllureRestAssured;
-import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import lombok.Getter;
@@ -31,12 +30,25 @@ public class SkuIdsGetterClient {
                 .filter(new AllureRestAssured());
     }
 
-    public ValidatableResponse getSkus() {
+    public List<String> getSkus() {
+        return given(this.requestSpecification)
+                .when()
+                .get(SKUS_ENDPOINT)
+                .then()
+                .extract()
+                .as(SkuIdsFillerResponse.class)
+                .getData()
+                .getContentFromList()
+                .getProductContentFromList()
+                .getListOfRecords();
+    }
+
+    public ValidatableResponse getSkusResponse() {
         return given(this.requestSpecification)
                 //.body(request)
                 .when()
                 .get(SKUS_ENDPOINT)
                 .then()
-                .log().body();
+                .log().all();
     }
 }
