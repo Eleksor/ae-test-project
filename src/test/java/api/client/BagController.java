@@ -6,6 +6,7 @@ import io.qameta.allure.Step;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class BagController {
                 .andReturn();
     }
 
-    @Step("Add item to bag")
+    @Step("Add list of items to bag")
     public Response addListOFItems(List<ItemRequest.Item> items) {
         ItemRequest request = new ItemRequest(items);
 
@@ -49,6 +50,39 @@ public class BagController {
                 .body(request)
                 .when()
                 .post(ITEMS_ENDPOINT)
+                .andReturn();
+    }
+
+    @Step("Delete item from bag")
+    public Response deleteItem(String itemIds) {
+
+        return given(this.requestSpecification)
+                .queryParam("itemIds",itemIds)
+                .when()
+                .delete(ITEMS_ENDPOINT)
+                .andReturn();
+    }
+
+    @Step("Delete item from bag")
+    public Response replaceItem(String skuIdNewItem, int quantity, String itemId) {
+        ItemRequest.Item item = new ItemRequest.Item(skuIdNewItem, quantity, itemId);
+        ItemRequest request = new ItemRequest(List.of(item));
+
+        return given(this.requestSpecification)
+                .body(request)
+                .when()
+                .patch(ITEMS_ENDPOINT)
+                .andReturn();
+    }
+
+    @Step("Delete list of items from bag")
+    public Response deleteListOFItems(List<ItemRequest.Item> items) {
+        ItemRequest request = new ItemRequest(items);
+
+        return given(this.requestSpecification)
+                .body(request)
+                .when()
+                .delete(ITEMS_ENDPOINT)
                 .andReturn();
     }
 
@@ -61,6 +95,13 @@ public class BagController {
                 .statusCode(200)
                 .extract()
                 .as(BagResponse.class);
+    }
+
+    @Step("Check status code")
+    public ResponseSpecification checkStatusCode(int statusCode) {
+        return given(this.requestSpecification)
+                .then()
+                .statusCode(statusCode);
     }
 
 }

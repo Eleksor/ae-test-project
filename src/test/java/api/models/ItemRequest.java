@@ -2,7 +2,9 @@ package api.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -10,11 +12,23 @@ import java.util.List;
 public class ItemRequest {
     private List<Item> items;
 
+    public ItemRequest() {
+        this.items = new ArrayList<>();
+    }
+
     @Data
     @AllArgsConstructor
     public static class Item {
         private String skuId;
         private int quantity;
+        private String itemId;
+
+        public Item(String skuId, int quantity) {
+            this.skuId = skuId;
+            this.quantity = quantity;
+        }
     }
+
+
 }
 

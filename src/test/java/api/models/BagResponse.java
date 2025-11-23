@@ -17,6 +17,8 @@ public class BagResponse {
         private String currencyCode;
         private List<Item> items;
         private int itemCount;
+        private double total;
+        private Summary summary;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -31,5 +33,11 @@ public class BagResponse {
         private int quantity;
         private double price;
         private double originalPrice;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Data
+    public static class Summary {
+        private double total;
     }
 }

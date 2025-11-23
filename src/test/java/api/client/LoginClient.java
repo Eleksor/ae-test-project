@@ -7,12 +7,10 @@ import lombok.Getter;
 import static io.restassured.RestAssured.given;
 @Getter
 public class LoginClient {
-
     TokenClient tokenClient = new TokenClient();
 
     private String bearerToken = tokenClient.tokenBearer();
     private String passwordToken;
-    private String cookieHeader;
 
     public void loginViaApi() {
         Response login =
@@ -31,7 +29,5 @@ public class LoginClient {
                 .log().body()
                 .statusCode(200);
         passwordToken = tokenClient.tokenPassword(this.getBearerToken());
-
-        //cookieHeader = login.getHeader("set-cookie");
     }
 }
